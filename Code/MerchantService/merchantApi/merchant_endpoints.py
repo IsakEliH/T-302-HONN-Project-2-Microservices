@@ -1,11 +1,13 @@
-from fastapi import FastAPI, HTTPException, status
-from Code.MerchantService.models.schemas import Merchant, CreateMerchantRequest
+from fastapi import APIRouter, FastAPI, HTTPException, status
+
+from models.merchant_model import CreateMerchantRequest
 from repository.merchant_repository import MerchantRepository
 
 
 app = FastAPI(title="MerchantService")
+router = APIRouter(prefix="/merchants")
 
-@app.post("/merchants", status_code=status.HTTP_201_CREATED)
+@router.post("/", tags=["merchants"], status_code=status.HTTP_201_CREATED)
 async def post_merchant(merchantRequest: CreateMerchantRequest):
     merchant_repo = MerchantRepository()
     merchantId = merchant_repo.save_merchant(merchantRequest)
@@ -14,7 +16,7 @@ async def post_merchant(merchantRequest: CreateMerchantRequest):
 
     
 
-@app.post("/merchants{id}", status_code=status.HTTP_201_CREATED)
+@router.post("/", tags=["merchants"], status_code=status.HTTP_201_CREATED)
 async def get_merchant(merchantId: int) -> Merchant:
     merchant_repo = MerchantRepository()
     merchant : dict = merchant_repo.get_merchant(merchantId)
@@ -24,3 +26,6 @@ async def get_merchant(merchantId: int) -> Merchant:
 
     
     return merchant
+
+
+app.include_router(router)
