@@ -4,7 +4,7 @@ from models import order_model
 from models.order_model import CreateOrderRequest
 from repositories.order_repository import OrderRepository
 
-app = FastAPI(title="OrderService (REST)")
+app = FastAPI(title="OrderService")
 router = APIRouter(prefix="/orders")
 
 
