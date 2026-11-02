@@ -1,5 +1,6 @@
 from fastapi import APIRouter, FastAPI, HTTPException, status
 
+from models import order_model
 from models.order_model import CreateOrderRequest
 from repositories.order_repository import OrderRepository
 
@@ -57,6 +58,8 @@ async def get_orders(orderId: int):
             status_code=status.HTTP_404_NOT_FOUND, detail="Order does not exist"
         )
 
+    
+
     # When return the order, make sure to mask the card number,
     # e.g. "************1234"
     card_number: str | None = order.get("creditCard", {}).get("cardNumber")
@@ -68,8 +71,9 @@ async def get_orders(orderId: int):
     # product price (of product with productId) - discount (if any)
     # -> price * (1-discount) if discount is not None else price
 
+    # We need to create Order which masks and does not show all data
+    new_order = order_model.build_order(order)
     # return 200 status code with response of order
-    return order
-
+    return new_order
 
 app.include_router(router)
