@@ -1,4 +1,3 @@
-import requests
 from pydantic import BaseModel
 
 
@@ -17,7 +16,7 @@ class CreditCard(BaseModel):
     cvc: int
 
 
-class CreateOrderRequest(BaseModel):
+class OrderRequest(BaseModel):
     productId: int
     merchantId: int
     buyerId: int
@@ -44,13 +43,12 @@ def build_order(order_dict: dict) -> Order:
     card_number: str = order_dict.get("creditCard", {}).get("cardNumber", str)
     new_card_number = 12 * "*" + card_number[12::]
 
-
     # Calculate total price
     discount: float = order_dict.get("discount", float)
     # TODO: total price should be calculated as:
     # product price (of product with productId) - discount (if any)
     # -> price * (1-discount) if discount is not None else price
-    
+
     # Need to get price first
     # response = requests.get(f"{BASE_URL}/items/{merchantId}").json()
     # price = response.get("price", int)

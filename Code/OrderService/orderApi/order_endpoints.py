@@ -1,7 +1,8 @@
 from fastapi import APIRouter, FastAPI, HTTPException, status
 
 from models import order_model
-from models.order_model import CreateOrderRequest
+from models.order_model import OrderRequest
+from rabbitmq.order_event_publisher import OrderSender
 from repositories.order_repository import OrderRepository
 
 app = FastAPI(title="OrderService")
@@ -9,10 +10,7 @@ router = APIRouter(prefix="/orders")
 
 
 @router.post("/", tags=["orders"], status_code=status.HTTP_201_CREATED)
-async def post_orders(request: CreateOrderRequest):
-
-    order_repo = OrderRepository()
-    order_repo.save_order(request)
+async def post_orders(request: OrderRequest):
 
     # TODO: If there is no merchant with the specific id,
     # return 400 with message "Merchant does not exit"
@@ -39,9 +37,15 @@ async def post_orders(request: CreateOrderRequest):
 
     # Validation passed, create order and return orderId
 
-    # TODO: reserve the product and store in database
-    # TODO: Send event that order has been created
-    # TODO return 201 status code with response of orderId
+    # reserve the product and store in database
+    order_repo = OrderRepository()
+    order_repo.save_order(request)
+
+    # Send event that order has been created
+    event_sender = OrderSender()
+    event_sender.send_order_event(request)
+
+    # return 201 status code with response of orderId
     return order_repo.latest_id
 
 
