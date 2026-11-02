@@ -49,31 +49,19 @@ async def post_orders(request: CreateOrderRequest):
 async def get_orders(orderId: int):
     # Get order from orderId
     order_repo = OrderRepository()
-    order: dict = order_repo.get_order(orderId)
+    order_dict: dict = order_repo.get_order(orderId)
 
     # If order with id does not exist,
     # return 404 with message "Order does not exist"
-    if not order:
+    if not order_dict:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Order does not exist"
         )
 
-    
-
-    # When return the order, make sure to mask the card number,
-    # e.g. "************1234"
-    card_number: str | None = order.get("creditCard", {}).get("cardNumber")
-    if card_number:
-        new_card_number = 12 * "*" + card_number[12::]
-        order.get("creditCard", {})["cardNumber"] = new_card_number
-
-    # TODO: total price should be calculated as:
-    # product price (of product with productId) - discount (if any)
-    # -> price * (1-discount) if discount is not None else price
-
     # We need to create Order which masks and does not show all data
-    new_order = order_model.build_order(order)
+    order = order_model.build_order(order_dict)
     # return 200 status code with response of order
-    return new_order
+    return order
+
 
 app.include_router(router)
