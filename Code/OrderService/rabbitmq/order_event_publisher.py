@@ -1,3 +1,5 @@
+import json
+
 import pika
 import pika.exceptions
 from retry import retry
@@ -9,29 +11,43 @@ class OrderSender:
     __QUEUE_NAME = "orders"
     __HOST: str = "rabbitmq"
     __PORT: int = 5672
-    __USERNAME: str = "project2"
-    __PASSWORD: str = "project2pass"
 
-    def send_order_event(self, order: OrderRequest):
+    def send_order_event(self, order: OrderRequest, order_id: int):
         connection: pika.BlockingConnection = self.__get_connection()
         channel = connection.channel()
 
-        channel.queue_declare(
-            queue=self.__QUEUE_NAME, durable=True, arguments={"x-queue-type": "quorum"}
-        )
-        channel.basic_publish(
-            exchange="",
-            routing_key=self.__QUEUE_NAME,
-            body=order.model_dump_json(indent=4),
-        )
+        try:
+            channel.queue_declare(
+                queue=self.__QUEUE_NAME,
+                durable=True,
+                arguments={"x-queue-type": "quorum"},
+            )
 
-    @retry(pika.exceptions.AMQPConnectionError, delay=5, jitter=(1, 3))
+            channel.confirm_delivery()
+
+            event = {
+                "eventType": "OrderCreated",
+                "orderId": order_id,
+                "order": order.model_dump(mode="json"),
+            }
+
+            channel.basic_publish(
+                exchange="",
+                routing_key=self.__QUEUE_NAME,
+                body=json.dumps(event).encode("utf-8"),
+                properties=pika.BasicProperties(
+                    content_type="application/json",
+                    delivery_mode=pika.DeliveryMode.Persistent,
+                ),
+                mandatory=True,
+            )
+        finally:
+            if connection.is_open:
+                connection.close()
+
+    @retry(pika.exceptions.AMQPConnectionError, tries=3, delay=5, jitter=(1, 3))
     def __get_connection(self) -> pika.BlockingConnection:
-        credentials = pika.PlainCredentials(self.__USERNAME, self.__PASSWORD)
 
-        parameters = pika.ConnectionParameters(
-            host=self.__HOST, port=self.__PORT, credentials=credentials
-        )
-
+        parameters = pika.ConnectionParameters(host=self.__HOST, port=self.__PORT)
         connection = pika.BlockingConnection(parameters)
         return connection

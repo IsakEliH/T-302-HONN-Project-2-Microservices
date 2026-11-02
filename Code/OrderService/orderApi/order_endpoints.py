@@ -41,15 +41,17 @@ async def post_orders(request: OrderRequest):
     order_repo = OrderRepository()
     order_repo.save_order(request)
 
+    order_id = order_repo.latest_id
+
     # Send event that order has been created
     event_sender = OrderSender()
-    event_sender.send_order_event(request)
+    event_sender.send_order_event(request, order_id)
 
     # return 201 status code with response of orderId
-    return order_repo.latest_id
+    return order_id
 
 
-@router.get("/{id}", tags=["orders"], status_code=status.HTTP_200_OK)
+@router.get("/{orderId}", tags=["orders"], status_code=status.HTTP_200_OK)
 async def get_orders(orderId: int):
     # Get order from orderId
     order_repo = OrderRepository()
