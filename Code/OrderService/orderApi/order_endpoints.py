@@ -7,7 +7,6 @@ app = FastAPI(title="OrderService (REST)")
 router = APIRouter(prefix="/orders")
 
 
-# @app.post("/orders", status_code=status.HTTP_201_CREATED)
 @router.post("/", tags=["orders"], status_code=status.HTTP_201_CREATED)
 async def post_orders(request: CreateOrderRequest):
 
@@ -41,7 +40,6 @@ async def post_orders(request: CreateOrderRequest):
     # TODO return 201 status code with response of orderId
 
 
-# @app.get("/orders/{id}", status_code=status.HTTP_200_OK)
 @router.get("/{id}", tags=["orders"], status_code=status.HTTP_200_OK)
 async def get_orders(orderId: int):
     # Get order from orderId
