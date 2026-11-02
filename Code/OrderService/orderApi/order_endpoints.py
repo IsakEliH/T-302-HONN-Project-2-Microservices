@@ -59,10 +59,10 @@ async def get_orders(orderId: int):
 
     # When return the order, make sure to mask the card number,
     # e.g. "************1234"
-    card_number: str | None = order.get("cardNumber")
+    card_number: str | None = order.get("creditCard", {}).get("cardNumber")
     if card_number:
         new_card_number = 12 * "*" + card_number[12::]
-        order["cardNumber"] = new_card_number
+        order.get("creditCard", {})["cardNumber"] = new_card_number
 
     # TODO: total price should be calculated as:
     # product price (of product with productId) - discount (if any)

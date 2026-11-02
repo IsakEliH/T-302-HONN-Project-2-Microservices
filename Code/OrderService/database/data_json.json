@@ -1,0 +1,28 @@
+[
+    {
+        "productId": 0,
+        "merchantId": 0,
+        "buyerId": 0,
+        "creditCard": {
+            "cardNumber": "string",
+            "expirationMonth": 0,
+            "expirationYear": 0,
+            "cvc": 0
+        },
+        "discount": 0.0,
+        "orderId": 1
+    },
+    {
+        "productId": 1234,
+        "merchantId": 123,
+        "buyerId": 123,
+        "creditCard": {
+            "cardNumber": "1234123412341234",
+            "expirationMonth": 8,
+            "expirationYear": 2025,
+            "cvc": 123
+        },
+        "discount": 0.2,
+        "orderId": 2
+    }
+]
