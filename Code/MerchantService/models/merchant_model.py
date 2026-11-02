@@ -18,6 +18,3 @@ class CreateMerchantRequest(BaseModel):
     allowsDiscount: bool
 
 
-
-def build_merchant(merchant: dict) -> Merchant:
-    ...

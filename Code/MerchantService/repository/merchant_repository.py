@@ -19,7 +19,7 @@ class MerchantRepository:
         next_id: int = self._get_next_id()
 
         format_message: dict = merchant.dict()
-        format_message["MerchantId"] = next_id
+        format_message["merchantId"] = next_id
 
         self.data_list.append(format_message)
         with open(self.DB_FILE, "w", encoding="utf-8") as file:
