@@ -1,12 +1,14 @@
-from fastapi import FastAPI, HTTPException, status
-from schemas import CreateOrderRequest
+from fastapi import APIRouter, FastAPI, HTTPException, status
 
+from models.order_model import CreateOrderRequest
 from repositories.order_repository import OrderRepository
 
 app = FastAPI(title="OrderService (REST)")
+router = APIRouter(prefix="/orders")
 
 
-@app.post("/orders", status_code=status.HTTP_201_CREATED)
+# @app.post("/orders", status_code=status.HTTP_201_CREATED)
+@router.post("/", tags=["orders"], status_code=status.HTTP_201_CREATED)
 async def post_orders(request: CreateOrderRequest):
 
     # TODO: If there is no merchant with the specific id,
@@ -39,7 +41,8 @@ async def post_orders(request: CreateOrderRequest):
     # TODO return 201 status code with response of orderId
 
 
-@app.get("/orders/{id}", status_code=status.HTTP_200_OK)
+# @app.get("/orders/{id}", status_code=status.HTTP_200_OK)
+@router.get("/{id}", tags=["orders"], status_code=status.HTTP_200_OK)
 async def get_orders(orderId: int):
     # Get order from orderId
     order_repo = OrderRepository()
@@ -65,3 +68,6 @@ async def get_orders(orderId: int):
 
     # return 200 status code with response of order
     return order
+
+
+app.include_router(router)

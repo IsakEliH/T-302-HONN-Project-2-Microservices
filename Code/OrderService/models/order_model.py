@@ -21,7 +21,7 @@ class CreateOrderRequest(BaseModel):
     merchantId: int
     buyerId: int
     creditCard: CreditCard
-    discount: float | None = None
+    discount: float = 0.0
 
 
 def build_order(order_dict: dict) -> Order:
