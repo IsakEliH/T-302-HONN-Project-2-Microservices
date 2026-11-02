@@ -20,4 +20,4 @@ class CreateMerchantRequest(BaseModel):
 
 
 def build_merchant(merchant: dict) -> Merchant:
-    pass
+    ...

@@ -1,23 +1,26 @@
 from fastapi import FastAPI, HTTPException, status
-from schemas import Merchant, CreateMerchantRequest
-from repository.merchant_repository import Mer
+from Code.MerchantService.models.schemas import Merchant, CreateMerchantRequest
+from repository.merchant_repository import MerchantRepository
 
 
 app = FastAPI(title="MerchantService")
 
-@app.post("/orders", status_code=status.HTTP_201_CREATED)
-async def post_merchant(request: CreateMerchantRequest):
-    ...
+@app.post("/merchants", status_code=status.HTTP_201_CREATED)
+async def post_merchant(merchantRequest: CreateMerchantRequest):
+    merchant_repo = MerchantRepository()
+    merchantId = merchant_repo.save_merchant(merchantRequest)
 
+    return merchantId
 
+    
 
-    #TODO Should return 201 HTTP Status Code with merchant the merchant id as the response message.
+@app.post("/merchants{id}", status_code=status.HTTP_201_CREATED)
+async def get_merchant(merchantId: int) -> Merchant:
+    merchant_repo = MerchantRepository()
+    merchant : dict = merchant_repo.get_merchant(merchantId)
 
+    if not merchant:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Merchant does not exist")
 
-async def get_merchant(id: int) -> Merchant:
-    ...
-
-
-    #TODO Merchantservice should return 404 HTTP Status Code if the merchant with the corresponding id does not exist
-
-    # Else it return the merchant 
+    
+    return merchant
