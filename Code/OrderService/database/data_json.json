@@ -4,7 +4,7 @@
         "merchantId": 0,
         "buyerId": 0,
         "creditCard": {
-            "cardNumber": "string",
+            "cardNumber": "1235124312348765",
             "expirationMonth": 0,
             "expirationYear": 0,
             "cvc": 0
