@@ -5,6 +5,8 @@ import os
 class OrderRepository:
     DB_FILE: str = "database/data_json.json"
     INDENT: int = 4
+    def __init__(self) -> None:
+        self.latest_id: int = 0
 
     def save_order(self, order) -> int:
         """
@@ -25,6 +27,7 @@ class OrderRepository:
         with open(self.DB_FILE, "w", encoding="utf-8") as file:
             json.dump(self.data_list, file, indent=self.INDENT)
 
+        self.latest_id = next_id
         return next_id
 
     def get_order(self, orderId: int) -> dict:
