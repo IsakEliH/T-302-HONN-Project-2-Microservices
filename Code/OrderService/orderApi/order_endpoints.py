@@ -37,14 +37,14 @@ async def post_orders(request: OrderRequest):
             status_code=status.HTTP_400_BAD_REQUEST, detail="Product does not exist"
         )
 
-    # TODO: If product with ProductId is sold out,
+    # If product with ProductId is sold out,
     # return 400 with message "Product is sold out"
     if inventory_response.json().get("quantity", int) == 0:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Product is sold out"
         )
 
-    # TODO: If productId does not belong to merchantId,
+    # If productId does not belong to merchantId,
     # return 400 with message "Product does not belong to merchant"
     if inventory_response.json().get("merchantId", int) != request.merchantId:
         raise HTTPException(
@@ -52,9 +52,9 @@ async def post_orders(request: OrderRequest):
             detail="Product does not belong to merchant",
         )
 
-    # TODO: If merchant with merchantId does not allow discount, and discount is not None,
+    # If merchant with merchantId does not allow discount, and discount is not None,
     # return 400 with message "Merchant does not allow discount"
-    if (merchant_response.json().get("allowDiscount", bool) is False):
+    if merchant_response.json().get("allowDiscount", bool) is False:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Merchant does not allow discount",
