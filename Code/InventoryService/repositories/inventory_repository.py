@@ -1,28 +1,30 @@
 import json
 import os
 
+from models.inventory_model import Inventory, build_inventory
+
 
 class InventoryRepository:
     DB_FILE: str = "database/data_json.json"
     INDENT: int = 4
-    ID:str = "productId"
+    ID: str = "productId"
 
     def __init__(self) -> None:
         self.latest_id: int = 0
 
-    def save_product(self, product) -> int:
+    def save_product(self, product: Inventory) -> int:
         """
         Save message to json and return the productId
 
         :param message: the request body
-        :type message: ...
+        :type message: Inventory
         :return: the productId of the message
         :rtype: int
         """
 
         next_id: int = self._get_next_id()
 
-        format_message: dict = product.dict()
+        format_message: dict = product.model_dump()
         format_message[self.ID] = next_id
 
         self.data_list.append(format_message)
@@ -48,6 +50,22 @@ class InventoryRepository:
                     if entry_dict.get(self.ID) == product_id:
                         return entry_dict
         return {}
+
+    def decrease_quantity(self, product_id: int, amount: int = 1) -> bool:
+        # Get the product
+        product = self.get_product(product_id)
+        if not product:
+            return False
+
+        # Decrease the quantity
+        product["quantity"] -= amount
+        if product["quantity"] < 0:
+            product["quantity"] = 0
+
+        # Update the database
+        updated_product = build_inventory(product)
+        self.save_product(updated_product)
+        return True
 
     def _get_next_id(self) -> int:
         """
