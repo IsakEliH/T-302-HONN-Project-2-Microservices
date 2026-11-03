@@ -23,6 +23,13 @@ def main():
     """
     channel = open_chanel()
 
+    channel.queue_declare(
+        queue=QUEUE,
+        durable=True,
+        arguments={"x-queue-type": "quorum"},
+    )
+
+
     for method, _properties, body in channel.consume(QUEUE):
         event = json.loads(body.decode("utf-8"))
         orderId = event["orderId"]
@@ -37,10 +44,13 @@ def main():
 
         result = PaymentResult(
             orderId=orderId,
-            paymentResult=status,
-            buyerEmail="EFTIR AÐ KLÁRA",
-            merchantEmail="EFTIR AÐ KLÁRA"  #TODO fá email hjá bæði buyer og merchant
-        )
+            paymentResult=status
+            )
+        
+        # )
+        #     buyerEmail="EFTIR AÐ KLÁRA",
+        #     merchantEmail="EFTIR AÐ KLÁRA"  #TODO fá email hjá bæði buyer og merchant eða taka út
+
 
         publish_payment(channel, "payments", result)
 

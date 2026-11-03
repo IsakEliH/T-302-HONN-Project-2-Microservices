@@ -3,8 +3,8 @@ from pydantic import BaseModel
 class PaymentResult(BaseModel):
     orderId: int
     paymentResult: str
-    buyerEmail: str
-    merchantEmail: str
+    # buyerEmail: str
+    # merchantEmail: str    TODO Taka út?? Halda????
 
 
 
