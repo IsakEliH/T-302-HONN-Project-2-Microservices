@@ -1,6 +1,9 @@
 import requests
 from pydantic import BaseModel
 
+MERCHANT_URL = "http://localhost:8001"
+BUYER_URL = "http://localhost:8002"
+INVENTORY_URL = "http://localhost:8003"
 
 class Order(BaseModel):
     productId: int
@@ -97,9 +100,7 @@ def calculate_total_price(price: float, discount: float) -> float:
     else:
         return price
 
-MERCHANT_URL = "http://localhost:8001"
-BUYER_URL = "http://localhost:8002"
-INVENTORY_URL = "http://localhost:8003"
+
 
 def get_merchant_email(merchant_id: int) -> str:
     response = requests.get(f"{MERCHANT_URL}/merchants/{merchant_id}").json()
