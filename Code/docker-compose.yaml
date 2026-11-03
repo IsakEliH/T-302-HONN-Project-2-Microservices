@@ -1,0 +1,12 @@
+services:
+  api: 
+    container_name: Microservice_proj_2_api
+    ports: 
+     - "8000:8000"
+    build: .
+    depends_on:
+      - rabbitmq
+    volumes:
+      - ./data
+  rabbitmq:
+    image: rabbitmq:3-management
