@@ -6,10 +6,10 @@ class PaymentRepository:
     DB_FILE: str = "database/paymentData.json"
     INDENT: int = 4
 
-    def save_payment(self, payment, orderId):
+    def save_payment(self, payment):
 
         format_message: dict = payment.dict()
-        format_message["orderId"] = orderId
+        orderId = payment["orderId"]
 
         self.data_list.append(format_message)
         with open(self.DB_FILE, "w", encoding="utf-8") as file:
