@@ -1,7 +1,7 @@
 import uvicorn
 from fastapi import FastAPI
 
-from merchantApi.merchant_endpoints import router as merchant_router
+from MerchantService.merchant_endpoints import router as merchant_router
 
 
 def create_app() -> FastAPI:
