@@ -1,0 +1,72 @@
+name: project2-microservices
+
+services:
+  OrderService:
+    build: ./OrderService
+    expose:
+      - 8000
+    volumes:
+      - order_data:/app/data
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  MerchantService:
+    build: ./MerchantService
+    expose:
+      - 8001
+    volumes:
+      - merchant_data:/app/data
+
+  BuyerService:
+    build: ./BuyerService
+    expose:
+      - 8002
+    volumes:
+      - buyer_data:/app/data
+
+  InventoryService:
+    build: ./InventoryService
+    expose:
+      - 8003
+    volumes:
+      - inventory_data:/app/data
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  EmailService:
+    build: ./EmailService
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  PaymentService:
+    build: ./PaymentService
+    volumes:
+      - payment_data:/app/data
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  rabbitmq:
+    image: rabbitmq:4-management
+    container_name: rabbitmq
+    expose:
+      - "5672"
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: [ "CMD", "rabbitmq-diagnostics", "-q", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  order_data:
+  merchant_data:
+  buyer_data:
+  inventory_data:
+  payment_data:
+  rabbitmq-data:
