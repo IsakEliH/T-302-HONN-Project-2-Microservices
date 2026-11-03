@@ -1,7 +1,8 @@
+import requests
 from fastapi import APIRouter, FastAPI, HTTPException, status
 
 from models import order_model
-from models.order_model import OrderRequest
+from models.order_model import MERCHANT_URL, OrderRequest
 from rabbitmq.order_event_publisher import OrderSender
 from repositories.order_repository import OrderRepository
 
@@ -12,28 +13,52 @@ router = APIRouter(prefix="/orders")
 @router.post("/", tags=["orders"], status_code=status.HTTP_201_CREATED)
 async def post_orders(request: OrderRequest):
 
-    # TODO: If there is no merchant with the specific id,
-    # return 400 with message "Merchant does not exit"
-    # if request.merchantId is None:
-    #     raise HTTPException(
-    #         status_code=status.HTTP_400_BAD_REQUEST, detail="Merchant does not exit"
-    #     )
-    # if request.buyerId is None:
-    #     raise HTTPException(
-    #         status_code=status.HTTP_400_BAD_REQUEST, detail="Buyer does not exit"
-    #     )
-    # if request.productId is None:
-    #     raise HTTPException(
-    #         status_code=status.HTTP_400_BAD_REQUEST, detail="Product does not exit"
-    #     )
-    # TODO: If product with ProductId is sold out,
+    merchant_response: requests.Response = requests.get(
+        f"{MERCHANT_URL}/merchants/{request.merchantId}"
+    ).json()
+    buyer_response: requests.Response = requests.get(
+        f"{order_model.BUYER_URL}/buyers/{request.buyerId}"
+    ).json()
+    inventory_response: requests.Response = requests.get(
+        f"{order_model.INVENTORY_URL}/products/{request.productId}"
+    ).json()
+
+    # Validations
+    if merchant_response.status_code == 404:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Merchant does not exist"
+        )
+    if buyer_response.status_code == 404:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Buyer does not exist"
+        )
+    if inventory_response.status_code == 404:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Product does not exist"
+        )
+
+    # If product with ProductId is sold out,
     # return 400 with message "Product is sold out"
+    if inventory_response.json().get("quantity", int) == 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Product is sold out"
+        )
 
-    # TODO: If productId does not belong to merchantId,
+    # If productId does not belong to merchantId,
     # return 400 with message "Product does not belong to merchant"
+    if inventory_response.json().get("merchantId", int) != request.merchantId:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Product does not belong to merchant",
+        )
 
-    # TODO: If merchant with merchantId does not allow discount, and discount is not None,
+    # If merchant with merchantId does not allow discount, and discount is not None,
     # return 400 with message "Merchant does not allow discount"
+    if merchant_response.json().get("allowDiscount", bool) is False:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Merchant does not allow discount",
+        )
 
     # Validation passed, create order and return orderId
 
