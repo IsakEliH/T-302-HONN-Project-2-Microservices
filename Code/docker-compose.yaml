@@ -1,7 +1,7 @@
 name: project2-microservices
 
 services:
-  OrderService:
+  order_service:
     build: ./OrderService
     expose:
       - 8000
@@ -11,21 +11,21 @@ services:
       rabbitmq:
         condition: service_healthy
 
-  MerchantService:
+  merchant_service:
     build: ./MerchantService
     expose:
       - 8001
     volumes:
       - merchant_data:/app/data
 
-  BuyerService:
+  buyer_service:
     build: ./BuyerService
     expose:
       - 8002
     volumes:
       - buyer_data:/app/data
 
-  InventoryService:
+  inventory_service:
     build: ./InventoryService
     expose:
       - 8003
@@ -35,13 +35,13 @@ services:
       rabbitmq:
         condition: service_healthy
 
-  EmailService:
+  email_service:
     build: ./EmailService
     depends_on:
       rabbitmq:
         condition: service_healthy
 
-  PaymentService:
+  payment_service:
     build: ./PaymentService
     volumes:
       - payment_data:/app/data
