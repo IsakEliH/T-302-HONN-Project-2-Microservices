@@ -1,7 +1,7 @@
-from PaymentService.card_validation import validateCard
-from PaymentService.models import CreditCard, OrderRequest, PaymentResult
-from PaymentService.messaging import open_chanel, publish_payment, QUEUE
-from PaymentService.payment_repository import PaymentRepository
+from card_validation import validateCard
+from models import CreditCard, OrderRequest, PaymentResult
+from messaging import open_chanel, publish_payment, QUEUE
+from payment_repository import PaymentRepository
 
 import json
 

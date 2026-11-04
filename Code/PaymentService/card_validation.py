@@ -1,4 +1,4 @@
-from PaymentService.models import CreditCard
+from models import CreditCard
 
 def __validateCardNumber(cardNumber: str):
     sum = 0

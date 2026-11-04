@@ -1,4 +1,4 @@
-from PaymentService.models import PaymentResult
+from models import PaymentResult
 
 from retry import retry
 import pika
