@@ -4,18 +4,14 @@ from retry import retry
 import pika
 import json
 
-QUEUE = "order"
+QUEUE = "orders"
 HOST = "rabbitmq"
 PORT = 5672
 
 
 @retry(pika.exceptions.AMQPConnectionError, tries=3, delay=5, jitter=(1, 3))
 def open_chanel():
-    parameters = pika.ConnectionParameters(
-        host=HOST,
-        port=PORT,
-    )
-
+    parameters = pika.ConnectionParameters(host=HOST, port=PORT)
     connection = pika.BlockingConnection(parameters)
     return connection
 

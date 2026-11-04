@@ -4,7 +4,14 @@ from messaging import open_chanel, publish_payment, QUEUE
 from payment_repository import PaymentRepository
 
 import json
+import logging
 
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+)
+
+logger = logging.getLogger("PaymentService")
 
 
 def save_payment(orderId: int, status: str):
@@ -21,48 +28,83 @@ def main():
     - Creates a PaymentResult object to be sent as an event
     - Sends the event
     """
-    channel = open_chanel().channel()
 
-    channel.queue_declare(
-        queue=QUEUE,
-        durable=True,
-        arguments={"x-queue-type": "quorum"},
-    )
+    logger.info("Initializing PaymentService...")
 
+    try:
+        # Connect to RabbitMQ
+        logger.info("Connecting to RabbitMQ...")
+        connection = open_chanel()
+        channel = connection.channel()
 
-    for method, _properties, body in channel.consume(QUEUE):
-        event = json.loads(body.decode("utf-8"))
-        orderId = event["orderId"]
-        order = event["order"]
+        logger.info("Successfully connected to RabbitMQ.")
 
-        if validateCard(order.get("creditCard")):
-            status = "success"
-        else:
-            status = "failed"
+        # Declare queue
+        logger.info("Declaring queue '%s'...", QUEUE)
 
-        save_payment(orderId, status)
-
-        # result for Email
-        result = PaymentResult(
-            orderId=orderId,
-            paymentResult=status
-            )
-
-        # result for Inventory
-        resultInventory = PaymentResultInventory(
-            productId=order.get("productId"),
-            paymentResult=status
+        channel.queue_declare(
+            queue=QUEUE,
+            durable=True,
+            arguments={"x-queue-type": "quorum"},
         )
-        
 
-        # Sends queue to EmailService
-        publish_payment(channel, "payments", result)
+        logger.info("Successfully declared queue '%s'.", QUEUE)
+        logger.info("Starting PaymentService consumer...")
 
-        # Sends queue to InventoryService
-        publish_payment(channel, "paymentInventory", resultInventory)
 
-        channel.basic_ack(method.delivery_tag)
 
+        for method, _properties, body in channel.consume(QUEUE):
+
+            event = json.loads(body.decode("utf-8"))
+            orderId = event["orderId"]
+            order = event["order"]
+            logger.info("Received order event. Order ID: %s", orderId)
+
+
+            if validateCard(order.get("creditCard")):
+                status = "success"
+            else:
+                status = "failed"
+            logger.info("Payment validation completed. Order ID: %s, Status: %s", orderId, status)
+
+            save_payment(orderId, status)
+
+            logger.info("Payment saved. Order ID: %s", orderId)
+
+            # result for Email
+            result = PaymentResult(
+                orderId=orderId,
+                paymentResult=status
+                )
+
+            # result for Inventory
+            resultInventory = PaymentResultInventory(
+                productId=order.get("productId"),
+                paymentResult=status
+            )
+            
+
+            # Sends queue to EmailService
+            publish_payment(channel, "payments", result)
+            logger.info("Published payment result to EmailService through, Queue: 'payments'.")
+
+            # Sends queue to InventoryService
+            publish_payment(channel, "paymentInventory", resultInventory)
+            logger.info("Published payment result to InventoryService through, Queue: 'paymentInventory'.")
+
+            channel.basic_ack(method.delivery_tag)
+
+            logger.info("Successfully processed order %s.", orderId)
+
+
+    except Exception:
+        logger.exception("PaymentService encountered an error.")
+
+
+    finally:
+        if 'connection' in locals() and connection.is_open:
+            connection.close()
+            logger.info("RabbitMQ connection closed.")
 
 if __name__=='__main__':
     main()

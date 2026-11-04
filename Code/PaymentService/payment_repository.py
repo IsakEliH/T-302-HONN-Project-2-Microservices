@@ -6,16 +6,15 @@ class PaymentRepository:
     DB_FILE: str = "data/paymentData.json"
     INDENT: int = 4
 
-    def save_payment(self, orderId, status):
+    def save_payment(self, orderId: int, status: str):
         format_message: dict = {
             "orderId": orderId,
             "status": status
         }
 
-        self.data_list.append(format_message)
+        #self.data_list.append(format_message)
         with open(self.DB_FILE, "w", encoding="utf-8") as file:
-            json.dump(self.data_list, file, indent=self.INDENT)
-
+            json.dump(format_message, file, indent=self.INDENT)
 
 
 
