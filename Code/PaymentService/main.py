@@ -21,7 +21,7 @@ def main():
     - Creates a PaymentResult object to be sent as an event
     - Sends the event
     """
-    channel = open_chanel()
+    channel = open_chanel().channel()
 
     channel.queue_declare(
         queue=QUEUE,

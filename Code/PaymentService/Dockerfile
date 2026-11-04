@@ -10,4 +10,4 @@ RUN pip install -r requirements.txt
 
 COPY . .
 
-CMD ["python", "payment_service.py"]
+CMD ["python", "main.py"]
