@@ -2,9 +2,8 @@ import json
 
 import pika
 import pika.exceptions
-from retry import retry
-
 from repositories.inventory_repository import InventoryRepository
+from retry import retry
 
 QUEUE: str = "paymentInventory"
 HOST: str = "rabbitmq"
