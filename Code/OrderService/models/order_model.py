@@ -1,9 +1,9 @@
 import requests
 from pydantic import BaseModel
 
-MERCHANT_URL = "http://localhost:8001"
-BUYER_URL = "http://localhost:8002"
-INVENTORY_URL = "http://localhost:8003"
+MERCHANT_URL = "http://merchant_service:8001"
+BUYER_URL = "http://buyer_service:8002"
+INVENTORY_URL = "http://inventory_service:8003"
 
 class Order(BaseModel):
     productId: int
