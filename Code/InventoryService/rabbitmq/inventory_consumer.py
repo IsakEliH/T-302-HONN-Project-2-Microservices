@@ -19,25 +19,29 @@ def main():
         queue=QUEUE, durable=True, arguments={"x-queue-type": "quorum"}
     )
 
-    for method_frame, properties, body in channel.consume(queue=QUEUE):
-        if method_frame is None or body is None:
-            continue
+    channel.basic_qos(prefetch_count=1)
 
-        # Event is a dictionary with the following keys: orderId, paymentResult
-        event = json.loads(body.decode("utf-8"))
-        product_id = event.get(
-            "productId"
-        )  # TODO: Remember to change event from PaymentService to include productId instead of orderId
-        payment_result = event.get("paymentResult")
+    channel.basic_consume(
+        queue=QUEUE,
+        on_message_callback=process_message,
+        auto_ack=False,
+    )
 
-        # TODO: stop reserving the specific product
-        if payment_result == "success":
-            repository = InventoryRepository()
-            repository.decrease_quantity(product_id)
-        # if payment_result == "failed":
-        #     pass
+    channel.start_consuming()
 
-        channel.basic_ack(delivery_tag=method_frame.delivery_tag)
+
+def process_message(channel, method, properties, body):
+    event = json.loads(body.decode("utf-8"))
+
+    product_id = event.get("productId")
+    payment_result = event.get("paymentResult")
+
+    # TODO: stop reserving the specific product
+    if payment_result == "success":
+        repository = InventoryRepository()
+        repository.decrease_quantity(product_id)
+
+    channel.basic_ack(delivery_tag=method.delivery_tag)
 
 
 @retry(pika.exceptions.AMQPConnectionError, tries=3, delay=5, jitter=(1, 3))
