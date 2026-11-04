@@ -22,11 +22,11 @@ def save_payment(orderId: int, status: str):
 
 def main():
     """
-    Opens up a channel and for loops through the QUEUE, so if a new event is sent it is processed
+    - Opens up a channel and for loops through the QUEUE, so if a new event is sent it is processed
     - Checks the validation of the card info
-    - Saves the order and the status of the validation
-    - Creates a PaymentResult object to be sent as an event
-    - Sends the event
+    - Saves the orderId and the status of the validation
+    - Creates a PaymentResult object
+    - Sends the object to be sent as an event
     """
 
     logger.info("Initializing PaymentService...")

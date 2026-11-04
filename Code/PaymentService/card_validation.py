@@ -31,6 +31,11 @@ def __validateCvc(cvc):
 
 
 def validateCard(cardInfo: CreditCard):
+    """
+    Takes in a Card object
+    Retrieves it's information and validates each indevidually
+    Returns True if all are valid, else returns False
+    """
     cardNumber = cardInfo.get("cardNumber")
     expirationMonth = cardInfo.get("expirationMonth")
     expirationYear = cardInfo.get("expirationYear")
