@@ -76,7 +76,7 @@ def build_order(order_dict: dict) -> Order:
     buyer_id: int = order_dict.get("buyerId")
 
     # Mask card number
-    card_number: str = order_dict.get("creditCard", {}).get("cardNumber")
+    card_number: str = order_dict.get("creditCard").get("cardNumber")
     new_card_number = 12 * "*" + card_number[12::]
 
     # Calculate total price
