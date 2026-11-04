@@ -7,6 +7,10 @@ services:
       - "8000:8000"
     expose:
       - 8000
+    environment:
+      - MERCHANT_URL=http://merchant_service:8001
+      - BUYER_URL=http://buyer_service:8002
+      - INVENTORY_URL=http://inventory_service:8003 
     volumes:
       - order_data:/app/data
     depends_on:
