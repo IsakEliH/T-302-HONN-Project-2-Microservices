@@ -1,7 +1,7 @@
 from fastapi import APIRouter, FastAPI, HTTPException, status
 
-from models.buyer_model import CreateBuyerRequest
-from repository.buyer_repository import BuyerRepository
+from Code.BuyerService.buyer_model import CreateBuyerRequest
+from Code.BuyerService.buyer_repository import BuyerRepository
 
 app = FastAPI(title="BuyerService")
 router = APIRouter(prefix="/buyers")

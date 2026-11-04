@@ -1,7 +1,7 @@
 import uvicorn
 from fastapi import FastAPI
 
-from buyerApi.buyer_endpoint import router as buyer_router
+from Code.BuyerService.buyer_endpoint import router as buyer_router
 
 
 def create_app() -> FastAPI:

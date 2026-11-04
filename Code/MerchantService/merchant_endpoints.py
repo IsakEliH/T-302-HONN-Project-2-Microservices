@@ -1,7 +1,7 @@
 from fastapi import APIRouter, FastAPI, HTTPException, status
 
-from models.merchant_model import CreateMerchantRequest
-from repository.merchant_repository import MerchantRepository
+from MerchantService.merchant_model import CreateMerchantRequest
+from MerchantService.merchant_repository import MerchantRepository
 
 
 app = FastAPI(title="MerchantService")
