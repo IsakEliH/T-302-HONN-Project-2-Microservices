@@ -3,7 +3,7 @@ import os
 
 
 class MerchantRepository:
-    DB_FILE: str = "database/merchantData.json"
+    DB_FILE: str = "data/merchantData.json"
     INDENT: int = 4
 
     def save_merchant(self, merchant):

@@ -3,7 +3,7 @@ import os
 
 
 class OrderRepository:
-    DB_FILE: str = "database/data_json.json"
+    DB_FILE: str = "data/data_json.json"
     INDENT: int = 4
     def __init__(self) -> None:
         self.latest_id: int = 0
