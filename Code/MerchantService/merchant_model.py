@@ -3,7 +3,7 @@ from pydantic import BaseModel
 
 class Merchant(BaseModel):
     name: str
-    snn: str
+    ssn: str
     email: str
     phoneNumber: str
     allowsDiscount: bool
@@ -12,7 +12,7 @@ class Merchant(BaseModel):
 
 class CreateMerchantRequest(BaseModel):
     name: str
-    snn: str
+    ssn: str
     email: str
     phoneNumber: str
     allowsDiscount: bool
