@@ -21,7 +21,7 @@ async def post_merchant(merchantRequest: MerchantRequest):
 
     
 
-@router.get("/{merchantId}", tags=["merchants"], status_code=status.HTTP_201_CREATED)
+@router.get("/{merchantId}", tags=["merchants"], status_code=status.HTTP_200_OK)
 async def get_merchant(merchantId: int):
     """
     Takes in int merchant Id

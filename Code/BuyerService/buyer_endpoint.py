@@ -19,8 +19,12 @@ async def post_buyer(buyerRequest: BuyerRequest):
     return buyerId
 
 
+<<<<<<< HEAD
 
 @router.get("/{buyerId}", tags=["buyers"], status_code=status.HTTP_201_CREATED)
+=======
+@router.get("/{buyerId}", tags=["buyers"], status_code=status.HTTP_200_OK)
+>>>>>>> b292de62744839f1e53663a8aad021badf1aa7bc
 async def get_buyer(buyerId: int):
     """
     Takes in buyers Id
