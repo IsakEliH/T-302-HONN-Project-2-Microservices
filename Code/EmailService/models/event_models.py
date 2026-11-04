@@ -23,7 +23,6 @@ class OrderCreatedEvent(BaseModel):
     merchant_email: str = Field(default="", alias="merchantEmail")
     total_price: float = Field(default=0.0, alias="totalPrice")
     discount: float = Field(default=0.0)
-    creddit_card: Optional[CreditCard] = Field(default=None, alias="creditCard")
 
     @model_validator(mode="before")
     @classmethod
@@ -59,16 +58,8 @@ class OrderCreatedEvent(BaseModel):
             flattened["buyer_email"] = flattened["buyerEmail"]
         if "merchantEmail" in flattened and "merchant_email" not in flattened:
             flattened["merchant_email"] = flattened["merchantEmail"]
-
         if "totalPrice" in flattened and "total_price" not in flattened:
             flattened["total_price"] = flattened["totalPrice"]
-
-        # Support credit_card alias for creddit_card
-        if "credit_card" in flattened and "creddit_card" not in flattened:
-            flattened["creddit_card"] = flattened["credit_card"]
-        elif "creditCard" in flattened and "creddit_card" not in flattened:
-            flattened["creddit_card"] = flattened["creditCard"]
-
         return flattened
 
 

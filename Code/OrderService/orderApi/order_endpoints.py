@@ -13,17 +13,18 @@ router = APIRouter(prefix="/orders")
 @router.post("/", tags=["orders"], status_code=status.HTTP_201_CREATED)
 async def post_orders(request: OrderRequest):
 
-    merchant_response: requests.Response = requests.get(
+    # Keep responses as raw Response objects first
+    merchant_response = requests.get(
         f"{MERCHANT_URL}/merchants/{request.merchantId}"
-    ).json()
-    buyer_response: requests.Response = requests.get(
+    )
+    buyer_response = requests.get(
         f"{order_model.BUYER_URL}/buyers/{request.buyerId}"
-    ).json()
-    inventory_response: requests.Response = requests.get(
+    )
+    inventory_response = requests.get(
         f"{order_model.INVENTORY_URL}/products/{request.productId}"
-    ).json()
+    )
 
-    # Validations
+    # Validations for 404 Not Found
     if merchant_response.status_code == 404:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Merchant does not exist"
@@ -37,16 +38,20 @@ async def post_orders(request: OrderRequest):
             status_code=status.HTTP_400_BAD_REQUEST, detail="Product does not exist"
         )
 
+    # Now extract the JSON dictionaries safely
+    merchant_data = merchant_response.json()
+    inventory_data = inventory_response.json()
+
     # If product with ProductId is sold out,
     # return 400 with message "Product is sold out"
-    if inventory_response.json().get("quantity", int) == 0:
+    if inventory_data.get("quantity", 0) == 0:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Product is sold out"
         )
 
     # If productId does not belong to merchantId,
     # return 400 with message "Product does not belong to merchant"
-    if inventory_response.json().get("merchantId", int) != request.merchantId:
+    if inventory_data.get("merchantId") != request.merchantId:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Product does not belong to merchant",
@@ -54,7 +59,7 @@ async def post_orders(request: OrderRequest):
 
     # If merchant with merchantId does not allow discount, and discount is not None,
     # return 400 with message "Merchant does not allow discount"
-    if merchant_response.json().get("allowDiscount", bool) is False:
+    if merchant_data.get("allowDiscount", True) is False:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Merchant does not allow discount",

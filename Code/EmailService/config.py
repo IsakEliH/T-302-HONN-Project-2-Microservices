@@ -13,6 +13,6 @@ class Config:
     RABBITMQ_PASSWORD: str = os.getenv("RABBITMQ_PASSWORD", "guest")
     
     # Queues to listen for order and payment events
-    QUEUES: list[str] = os.getenv("RABBITMQ_QUEUES", "orders,payments,email_events").split(",")
+    QUEUES: list[str] = os.getenv("RABBITMQ_QUEUES", "order_email,payments,email_events").split(",")
 
 config = Config()
