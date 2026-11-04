@@ -11,12 +11,23 @@ PORT = 5672
 
 @retry(pika.exceptions.AMQPConnectionError, tries=3, delay=5, jitter=(1, 3))
 def open_chanel():
+    """
+    Opens the RabbitMQ connection and returns it
+    """
     parameters = pika.ConnectionParameters(host=HOST, port=PORT)
     connection = pika.BlockingConnection(parameters)
     return connection
 
 
 def publish_payment(channel, queue, paymentResult: PaymentResult | PaymentResultInventory):
+    """
+    Takes in:
+    - channel: the RabbitMQ channel
+    - queue: either payments or paymentInventory
+    - paymentResult: either for EmailService or InventoryService
+
+    Creates an event and publishes it to the queue
+    """
     event = paymentResult.model_dump(mode='json')
 
     channel.basic_publish(
