@@ -14,7 +14,7 @@ async def post_buyer(buyerRequest: CreateBuyerRequest):
     return buyerId
 
 
-@router.get("/{buyerId}", tags=["buyers"], status_code=status.HTTP_201_CREATED)
+@router.get("/{buyerId}", tags=["buyers"], status_code=status.HTTP_200_OK)
 async def get_buyer(buyerId: int):
     buyer_repo = BuyerRepository()
     buyer : dict = buyer_repo.get_buyer(buyerId)
