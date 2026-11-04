@@ -71,16 +71,16 @@ def build_order(order_dict: dict) -> Order:
     :rtype: Order
     """
 
-    product_id: int = order_dict.get("productId", int)
-    merchant_id: int = order_dict.get("merchantId", int)
-    buyer_id: int = order_dict.get("buyerId", int)
+    product_id: int = order_dict.get("productId")
+    merchant_id: int = order_dict.get("merchantId")
+    buyer_id: int = order_dict.get("buyerId")
 
     # Mask card number
-    card_number: str = order_dict.get("creditCard", {}).get("cardNumber", str)
+    card_number: str = order_dict.get("creditCard", {}).get("cardNumber")
     new_card_number = 12 * "*" + card_number[12::]
 
     # Calculate total price
-    discount: float = order_dict.get("discount", float)
+    discount: float = order_dict.get("discount")
 
     price = get_price(product_id)
     totalPrice = calculate_total_price(price, discount)
@@ -104,20 +104,20 @@ def calculate_total_price(price: float, discount: float) -> float:
 
 def get_merchant_email(merchant_id: int) -> str:
     response = requests.get(f"{MERCHANT_URL}/merchants/{merchant_id}").json()
-    email = response.get("email", str)
+    email = response.get("email")
     return email
 
 def get_buyer_email(buyer_id: int) -> str:
     response = requests.get(f"{BUYER_URL}/buyers/{buyer_id}").json()
-    email = response.get("email", str)
+    email = response.get("email")
     return email
 
 def get_product_name(product_id: int) -> str:
     response = requests.get(f"{INVENTORY_URL}/products/{product_id}").json()
-    name = response.get("name", str)
+    name = response.get("productName")
     return name
 
 def get_price(product_id: int) -> float:
     response = requests.get(f"{INVENTORY_URL}/products/{product_id}").json()
-    price = response.get("price", float)
+    price = response.get("price")
     return price

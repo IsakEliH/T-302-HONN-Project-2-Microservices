@@ -10,7 +10,7 @@ from models.order_model import OrderRequest, build_order_email_request
 
 class OrderSender:
     __QUEUE_ORDER: str = "orders"
-    __QUEUE_EMAIL: str = "order_emails"
+    __QUEUE_EMAIL: str = "order_email"
     __queues: list[str] = [__QUEUE_ORDER, __QUEUE_EMAIL]
 
     __EVENT_TYPE: str = "OrderCreated"
@@ -26,7 +26,7 @@ class OrderSender:
 
             # Publish to payment queue
             payment_order_event_body = self.__create_order_event_body(
-                self.__EVENT_TYPE, order_id, order.model_dump(mode="json")
+                self.__EVENT_TYPE, order_id, order
             )
             self.__publish_to_queue(
                 channel, self.__QUEUE_ORDER, payment_order_event_body
@@ -35,7 +35,7 @@ class OrderSender:
             # Publish to email queue
             email_order_model = build_order_email_request(order, order_id)
             email_order_event_body = self.__create_order_event_body(
-                self.__EVENT_TYPE, order_id, email_order_model.model_dump(mode="json")
+                self.__EVENT_TYPE, order_id, email_order_model
             )
             self.__publish_to_queue(channel, self.__QUEUE_EMAIL, email_order_event_body)
 
@@ -49,7 +49,7 @@ class OrderSender:
         order_event = {
             "eventType": event_type,
             "orderId": order_id,
-            "order": order_model.model_dump(mode="json"),
+            "order": order_model.model_dump(mode="json")
         }
         return json.dumps(order_event).encode("utf-8")
 

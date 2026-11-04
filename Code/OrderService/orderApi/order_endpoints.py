@@ -44,7 +44,7 @@ async def post_orders(request: OrderRequest):
 
     # If product with ProductId is sold out,
     # return 400 with message "Product is sold out"
-    if inventory_data.get("quantity", 0) == 0:
+    if inventory_data.get("quantity") == 0:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Product is sold out"
         )
@@ -59,7 +59,7 @@ async def post_orders(request: OrderRequest):
 
     # If merchant with merchantId does not allow discount, and discount is not None,
     # return 400 with message "Merchant does not allow discount"
-    if merchant_data.get("allowDiscount", True) is False:
+    if merchant_data.get("allowDiscount") is False:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Merchant does not allow discount",
