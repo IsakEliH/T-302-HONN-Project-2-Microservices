@@ -5,7 +5,7 @@ from models.inventory_model import Inventory, build_inventory
 
 
 class InventoryRepository:
-    DB_FILE: str = "database/data_json.json"
+    DB_FILE: str = "data/data_json.json"
     INDENT: int = 4
     ID: str = "productId"
 

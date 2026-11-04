@@ -2,7 +2,7 @@ import json
 import os
 
 class BuyerRepository:
-    DB_FILE: str = "database/buyerData.json"
+    DB_FILE: str = "data/buyerData.json"
     INDENT: int = 4
 
     def save_buyer(self, buyer):
