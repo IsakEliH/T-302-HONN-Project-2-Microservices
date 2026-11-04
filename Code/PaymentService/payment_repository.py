@@ -3,7 +3,7 @@ import os
 
 
 class PaymentRepository:
-    DB_FILE: str = "paymentData.json"
+    DB_FILE: str = "data/paymentData.json"
     INDENT: int = 4
 
     def save_payment(self, orderId, status):

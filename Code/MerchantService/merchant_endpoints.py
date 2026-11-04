@@ -16,7 +16,7 @@ async def post_merchant(merchantRequest: CreateMerchantRequest):
 
     
 
-@router.get("/", tags=["merchants"], status_code=status.HTTP_201_CREATED)
+@router.get("/{merchantId}", tags=["merchants"], status_code=status.HTTP_201_CREATED)
 async def get_merchant(merchantId: int):
     merchant_repo = MerchantRepository()
     merchant : dict = merchant_repo.get_merchant(merchantId)
