@@ -3,6 +3,8 @@ name: project2-microservices
 services:
   order_service:
     build: ./OrderService
+    ports:
+      - "8000:8000"
     expose:
       - 8000
     volumes:
@@ -13,6 +15,8 @@ services:
 
   merchant_service:
     build: ./MerchantService
+    ports:
+      - "8001:8001"
     expose:
       - 8001
     volumes:
@@ -20,6 +24,8 @@ services:
 
   buyer_service:
     build: ./BuyerService
+    ports:
+      - "8002:8002"
     expose:
       - 8002
     volumes:
@@ -27,6 +33,8 @@ services:
 
   inventory_service:
     build: ./InventoryService
+    ports:
+      - "8003:8003"
     expose:
       - 8003
     volumes:
