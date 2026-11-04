@@ -6,7 +6,7 @@ from retry import retry
 
 from repositories.inventory_repository import InventoryRepository
 
-QUEUE: str = "payments"
+QUEUE: str = "paymentInventory"
 HOST: str = "rabbitmq"
 PORT: int = 5672
 
