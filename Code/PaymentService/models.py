@@ -6,6 +6,9 @@ class PaymentResult(BaseModel):
     # buyerEmail: str
     # merchantEmail: str    TODO Taka út?? Halda????
 
+class PaymentResultInventory(BaseModel):
+    productId: int
+    paymentResult: str
 
 
 class CreditCard(BaseModel):

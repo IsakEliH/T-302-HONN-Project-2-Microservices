@@ -1,5 +1,5 @@
 from card_validation import validateCard
-from models import CreditCard, OrderRequest, PaymentResult
+from models import PaymentResult, PaymentResultInventory
 from messaging import open_chanel, publish_payment, QUEUE
 from payment_repository import PaymentRepository
 
@@ -42,17 +42,24 @@ def main():
 
         save_payment(orderId, status)
 
+        # result for Email
         result = PaymentResult(
             orderId=orderId,
             paymentResult=status
             )
+
+        # result for Inventory
+        resultInventory = PaymentResultInventory(
+            productId=order.get("productId"),
+            paymentResult=status
+        )
         
-        # )
-        #     buyerEmail="EFTIR AÐ KLÁRA",
-        #     merchantEmail="EFTIR AÐ KLÁRA"  #TODO fá email hjá bæði buyer og merchant eða taka út
 
-
+        # Sends queue to EmailService
         publish_payment(channel, "payments", result)
+
+        # Sends queue to InventoryService
+        publish_payment(channel, "paymentInventory", resultInventory)
 
         channel.basic_ack(method.delivery_tag)
 

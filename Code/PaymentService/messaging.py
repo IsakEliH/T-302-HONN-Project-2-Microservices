@@ -1,4 +1,4 @@
-from models import PaymentResult
+from models import PaymentResult, PaymentResultInventory
 
 from retry import retry
 import pika
@@ -20,7 +20,7 @@ def open_chanel():
     return connection
 
 
-def publish_payment(channel, queue, paymentResult: PaymentResult):
+def publish_payment(channel, queue, paymentResult: PaymentResult | PaymentResultInventory):
     event = paymentResult.model_dump(mode='json')
 
     channel.basic_publish(
