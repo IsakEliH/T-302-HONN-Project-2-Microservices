@@ -78,7 +78,12 @@ class EmailSender:
 
         return results
 
-    def handle_payment_success(self, event: PaymentEvent) -> Dict[str, bool]:
+    def handle_payment_success(
+        self,
+        event: PaymentEvent,
+        buyer_email: Optional[str] = None,
+        merchant_email: Optional[str] = None,
+    ) -> Dict[str, bool]:
         """
         Processes Payment-Success event and sends notification emails.
         Subject: 'Order has been purchased'
@@ -88,15 +93,28 @@ class EmailSender:
         body = f"Order {event.order_id} has been successfully purchased"
         html = f"<p>Order <strong>#{event.order_id}</strong> has been successfully purchased.</p>"
 
+        b_email = buyer_email or event.buyer_email
+        m_email = merchant_email or event.merchant_email
+
         results = {}
-        if event.buyer_email:
-            results["buyer"] = self.send_email(event.buyer_email, subject, body, html)
-        if event.merchant_email:
-            results["merchant"] = self.send_email(event.merchant_email, subject, body, html)
+        if b_email:
+            results["buyer"] = self.send_email(b_email, subject, body, html)
+        else:
+            logger.warning("No buyer email found for payment success notification on order %s", event.order_id)
+
+        if m_email:
+            results["merchant"] = self.send_email(m_email, subject, body, html)
+        else:
+            logger.warning("No merchant email found for payment success notification on order %s", event.order_id)
 
         return results
 
-    def handle_payment_failure(self, event: PaymentEvent) -> Dict[str, bool]:
+    def handle_payment_failure(
+        self,
+        event: PaymentEvent,
+        buyer_email: Optional[str] = None,
+        merchant_email: Optional[str] = None,
+    ) -> Dict[str, bool]:
         """
         Processes Payment-Failure event and sends notification emails.
         Subject: 'Order purchase failed'
@@ -106,10 +124,18 @@ class EmailSender:
         body = f"Order {event.order_id} purchase has failed"
         html = f"<p>Order <strong>#{event.order_id}</strong> purchase has failed.</p>"
 
+        b_email = buyer_email or event.buyer_email
+        m_email = merchant_email or event.merchant_email
+
         results = {}
-        if event.buyer_email:
-            results["buyer"] = self.send_email(event.buyer_email, subject, body, html)
-        if event.merchant_email:
-            results["merchant"] = self.send_email(event.merchant_email, subject, body, html)
+        if b_email:
+            results["buyer"] = self.send_email(b_email, subject, body, html)
+        else:
+            logger.warning("No buyer email found for payment failure notification on order %s", event.order_id)
+
+        if m_email:
+            results["merchant"] = self.send_email(m_email, subject, body, html)
+        else:
+            logger.warning("No merchant email found for payment failure notification on order %s", event.order_id)
 
         return results

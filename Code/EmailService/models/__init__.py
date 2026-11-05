@@ -1,3 +1,3 @@
-from .event_models import CreditCard, OrderCreatedEvent, PaymentEvent
+from .event_models import OrderCreatedEvent, PaymentEvent
 
-__all__ = ["CreditCard", "OrderCreatedEvent", "PaymentEvent"]
+__all__ = ["OrderCreatedEvent", "PaymentEvent"]

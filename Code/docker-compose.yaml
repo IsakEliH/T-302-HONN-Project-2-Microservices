@@ -49,6 +49,8 @@ services:
 
   email_service:
     build: ./EmailService
+    deploy:
+      replicas: 2
     environment:
       - RESEND_API_KEY=${RESEND_API_KEY}
       - RESEND_SENDER_EMAIL=${RESEND_SENDER_EMAIL:-onboarding@resend.dev}
@@ -67,14 +69,16 @@ services:
         condition: service_healthy
 
   rabbitmq:
+
     image: rabbitmq:4-management
     container_name: rabbitmq
     expose:
       - "5672"
     volumes:
       - rabbitmq-data:/var/lib/rabbitmq
+      - ./enabled_plugins:/etc/rabbitmq/enabled_plugins
     healthcheck:
-      test: [ "CMD", "rabbitmq-diagnostics", "-q", "ping" ]
+      test: [ "CMD", "rabbitmq-diagnostics", "-q", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5

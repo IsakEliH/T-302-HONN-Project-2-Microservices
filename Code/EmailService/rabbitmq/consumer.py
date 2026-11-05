@@ -1,5 +1,6 @@
 import json
 import logging
+import socket
 import time
 from typing import Optional
 import pika
@@ -16,17 +17,19 @@ if not logger.handlers:
 
 
 class RabbitMQConsumer:
-    # TODO mitigate using none
     def __init__(self, email_sender: Optional[EmailSender] = None):
         self.email_sender = email_sender or EmailSender()
         self.host = config.RABBITMQ_HOST
         self.port = config.RABBITMQ_PORT
         self.user = config.RABBITMQ_USER
         self.password = config.RABBITMQ_PASSWORD
-        self.queues = [q.strip() for q in config.QUEUES if q.strip()]
         self.connection: Optional[pika.BlockingConnection] = None
         self.channel: Optional[pika.adapters.blocking_connection.BlockingChannel] = None
         self._is_running = False
+
+        # In-memory stores to track and correlate asynchronous OrderCreated and Payment events by order_id
+        self.orders: dict[int, OrderCreatedEvent] = {}
+        self.pending_payments: dict[int, list[PaymentEvent]] = {}
 
     @retry(pika.exceptions.AMQPConnectionError, tries=10, delay=3, jitter=(1, 3))
     def _connect(self) -> pika.BlockingConnection:
@@ -43,33 +46,63 @@ class RabbitMQConsumer:
 
     def _setup_channel(self) -> None:
         self.channel = self.connection.channel()
-        # prefetch_count=1 ensures worker queue distribution when scaled
         self.channel.basic_qos(prefetch_count=1)
 
-        for queue_name in self.queues:
-            try:
-                # First attempt quorum queue declaration (as used by OrderService)
-                self.channel.queue_declare(
-                    queue=queue_name,
-                    durable=True,
-                    arguments={"x-queue-type": "quorum"},
-                )
-            except pika.exceptions.ChannelClosedByBroker:
-                # If existing queue type is classic, recreate channel and declare without quorum argument
-                logger.info("Re-declaring queue '%s' with standard configuration.", queue_name)
-                self.channel = self.connection.channel()
-                self.channel.basic_qos(prefetch_count=1)
-                self.channel.queue_declare(
-                    queue=queue_name,
-                    durable=True,
-                )
+        # 1. Setup Consistent Hash Exchange and Dynamic Queue for Email Events
+        email_exchange = "email.events.exchange"
+        container_hostname = socket.gethostname()
+        dynamic_email_queue = f"email_queue_{container_hostname}"
 
-            self.channel.basic_consume(
-                queue=queue_name,
-                on_message_callback=self._on_message,
-                auto_ack=False,
+        self.channel.exchange_declare(
+            exchange=email_exchange,
+            exchange_type="x-consistent-hash",
+            durable=True,
+        )
+
+        # Declare a unique private queue for this container instance
+        self.channel.queue_declare(
+            queue=dynamic_email_queue,
+            durable=True,
+            exclusive=False,  # Keep durable so messages aren't lost if restarting briefly
+        )
+
+        # Bind this container's queue to the exchange with weight '1'
+        self.channel.queue_bind(
+            exchange=email_exchange,
+            queue=dynamic_email_queue,
+            routing_key="1",
+        )
+
+        self.channel.basic_consume(
+            queue=dynamic_email_queue,
+            on_message_callback=self._on_message,
+            auto_ack=False,
+        )
+        logger.info("Subscribed to dynamic email queue '%s' via consistent hash exchange", dynamic_email_queue)
+
+        # 2. Setup standard queue for Payment events (e.g., 'payments')
+        payment_queue = "payments"
+        try:
+            self.channel.queue_declare(
+                queue=payment_queue,
+                durable=True,
+                arguments={"x-queue-type": "quorum"},
             )
-            logger.info("Subscribed to queue '%s' with prefetch_count=1", queue_name)
+        except pika.exceptions.ChannelClosedByBroker:
+            logger.info("Re-declaring queue '%s' with standard configuration.", payment_queue)
+            self.channel = self.connection.channel()
+            self.channel.basic_qos(prefetch_count=1)
+            self.channel.queue_declare(
+                queue=payment_queue,
+                durable=True,
+            )
+
+        self.channel.basic_consume(
+            queue=payment_queue,
+            on_message_callback=self._on_message,
+            auto_ack=False,
+        )
+        logger.info("Subscribed to queue '%s' with prefetch_count=1", payment_queue)
 
     def _on_message(
         self,
@@ -80,24 +113,84 @@ class RabbitMQConsumer:
     ) -> None:
         delivery_tag = method.delivery_tag
         routing_key = method.routing_key
+        time.sleep(0.5)
         try:
             payload = json.loads(body.decode("utf-8"))
-            logger.info("Received event on '%s': %s", routing_key, payload)
+            logger.info("Received event (routing_key/queue: %s): %s", routing_key, payload)
             self.process_event(payload, routing_key)
             channel.basic_ack(delivery_tag=delivery_tag)
         except json.JSONDecodeError as err:
-            logger.error("Failed to decode JSON from queue '%s': %s", routing_key, err)
-            # Ack/discard malformed messages to prevent blocking the queue
+            logger.error("Failed to decode JSON: %s", err)
             channel.basic_ack(delivery_tag=delivery_tag)
         except Exception as exc:
-            logger.error("Error processing message from queue '%s': %s", routing_key, exc, exc_info=True)
-            # Ack to avoid poison message loop, or nack without requeue
+            logger.error("Error processing message: %s", exc, exc_info=True)
             channel.basic_ack(delivery_tag=delivery_tag)
 
+    def _handle_order_created(self, order_event: OrderCreatedEvent) -> None:
+        order_id = order_event.order_id
+        self.orders[order_id] = order_event
+        logger.info(
+            "Stored OrderCreated record for order %s (buyer: %s, merchant: %s)",
+            order_id,
+            order_event.buyer_email,
+            order_event.merchant_email,
+        )
+
+        self.email_sender.handle_order_created(order_event)
+
+        if order_id in self.pending_payments:
+            pending_list = self.pending_payments.pop(order_id)
+            logger.info(
+                "Found %s pending payment event(s) for order %s. Sending correlated payment emails now.",
+                len(pending_list),
+                order_id,
+            )
+            for payment_event in pending_list:
+                self._dispatch_payment_email(
+                    payment_event,
+                    buyer_email=order_event.buyer_email,
+                    merchant_email=order_event.merchant_email,
+                )
+
+    def _handle_payment_event(self, payment_event: PaymentEvent) -> None:
+        order_id = payment_event.order_id
+        if order_id in self.orders:
+            order_info = self.orders[order_id]
+            buyer_email = order_info.buyer_email or payment_event.buyer_email
+            merchant_email = order_info.merchant_email or payment_event.merchant_email
+            logger.info("Correlated payment event for order %s with stored order emails.", order_id)
+            self._dispatch_payment_email(
+                payment_event,
+                buyer_email=buyer_email,
+                merchant_email=merchant_email,
+            )
+        else:
+            self.pending_payments.setdefault(order_id, []).append(payment_event)
+            logger.info(
+                "OrderCreated for order %s not yet received. Stored payment event in pending queue.",
+                order_id,
+            )
+
+    def _dispatch_payment_email(
+        self,
+        payment_event: PaymentEvent,
+        buyer_email: Optional[str] = None,
+        merchant_email: Optional[str] = None,
+    ) -> None:
+        if payment_event.is_success:
+            self.email_sender.handle_payment_success(
+                payment_event,
+                buyer_email=buyer_email,
+                merchant_email=merchant_email,
+            )
+        else:
+            self.email_sender.handle_payment_failure(
+                payment_event,
+                buyer_email=buyer_email,
+                merchant_email=merchant_email,
+            )
+
     def process_event(self, data: dict, routing_key: str = "") -> None:
-        """
-        Parses and handles event based on eventType, routing key, or event data.
-        """
         event_type = (
             data.get("eventType")
             or data.get("event_type")
@@ -105,39 +198,32 @@ class RabbitMQConsumer:
             or ""
         ).lower()
 
-        # Check for OrderCreated event
-        if (
+        is_order_created = (
             "ordercreated" in event_type
             or "order-created" in event_type
             or "order_created" in event_type
-            or routing_key == "orders"
-            or ("order" in data and "orderId" in data and "status" not in data)
-        ):
-            # Parse OrderCreatedEvent
+            or ("order" in data and "orderId" in data)
+            or ("buyer_email" in data or "buyerEmail" in data)
+            or ("product_name" in data or "productName" in data)
+            or ("total_price" in data or "totalPrice" in data)
+        )
+
+        if is_order_created:
             order_event = OrderCreatedEvent.model_validate(data)
-            self.email_sender.handle_order_created(order_event)
+            self._handle_order_created(order_event)
             return
 
-        # Check for PaymentSuccess event
-        if (
-            "paymentsuccess" in event_type
-            or "payment-success" in event_type
-            or "payment_success" in event_type
-            or (data.get("status") or "").upper() == "SUCCESS"
-        ):
-            payment_event = PaymentEvent.model_validate(data)
-            self.email_sender.handle_payment_success(payment_event)
-            return
+        is_payment = (
+            "payment" in event_type
+            or routing_key == "payments"
+            or "paymentResult" in data
+            or "payment_result" in data
+            or ("orderId" in data and "status" in data and "product_name" not in data and "productName" not in data and "buyerEmail" not in data and "buyer_email" not in data)
+        )
 
-        # Check for PaymentFailure event
-        if (
-            "paymentfailure" in event_type
-            or "payment-failure" in event_type
-            or "payment_failure" in event_type
-            or (data.get("status") or "").upper() in ("FAILURE", "FAILED")
-        ):
+        if is_payment:
             payment_event = PaymentEvent.model_validate(data)
-            self.email_sender.handle_payment_failure(payment_event)
+            self._handle_payment_event(payment_event)
             return
 
         logger.warning("Unrecognized event structure received: %s", data)
