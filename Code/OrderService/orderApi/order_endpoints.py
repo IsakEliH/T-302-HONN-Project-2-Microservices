@@ -67,7 +67,10 @@ async def post_orders(request: OrderRequest):
 
     # Validation passed, create order and return orderId
 
-    # reserve the product and store in database
+    # reserve the product
+    order_model.reserve_product(request.productId)
+    
+    # store in database
     order_repo = OrderRepository()
     order_repo.save_order(request)
 

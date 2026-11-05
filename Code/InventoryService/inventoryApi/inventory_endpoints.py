@@ -1,5 +1,4 @@
 from fastapi import APIRouter, FastAPI, HTTPException, status
-
 from models.inventory_model import InventoryRequest, build_inventory
 from repositories.inventory_repository import InventoryRepository
 
@@ -36,6 +35,31 @@ async def get_product(productId: int):
     # Return respond body Inventory for the productId
     return build_inventory(product)
 
+
 # TODO: Add endpoint to reserve a product item (for OrderService)
+@router.post("/{productId}/reserve", status_code=status.HTTP_200_OK)
+async def reserve_product(productId: int):
+    # get product from db
+    inventory_repo = InventoryRepository()
+    product = inventory_repo.get_product(productId)
+
+    # raise 404 error if not exist: "Product does not exist"
+    if not product:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Product does not exist"
+        )
+
+    # Check if quantity is 0, if so return 400 with message "Product is sold out"
+    if product.get("quantity") == 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Product is sold out"
+        )
+
+    # Reserve the product
+    if not inventory_repo.reserve_product(productId, amount=1):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Failed to reserve product"
+        )
+
 
 app.include_router(router)
