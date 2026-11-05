@@ -5,6 +5,7 @@ MERCHANT_URL = "http://merchant_service:8001"
 BUYER_URL = "http://buyer_service:8002"
 INVENTORY_URL = "http://inventory_service:8003"
 
+
 class Order(BaseModel):
     productId: int
     merchantId: int
@@ -101,23 +102,29 @@ def calculate_total_price(price: float, discount: float) -> float:
         return price
 
 
-
 def get_merchant_email(merchant_id: int) -> str:
     response = requests.get(f"{MERCHANT_URL}/merchants/{merchant_id}").json()
     email = response.get("email")
     return email
+
 
 def get_buyer_email(buyer_id: int) -> str:
     response = requests.get(f"{BUYER_URL}/buyers/{buyer_id}").json()
     email = response.get("email")
     return email
 
+
 def get_product_name(product_id: int) -> str:
     response = requests.get(f"{INVENTORY_URL}/products/{product_id}").json()
     name = response.get("productName")
     return name
 
+
 def get_price(product_id: int) -> float:
     response = requests.get(f"{INVENTORY_URL}/products/{product_id}").json()
     price = response.get("price")
     return price
+
+def reserve_product(product_id: int) -> bool:
+    response = requests.post(f"{INVENTORY_URL}/products/{product_id}/reserve")
+    return response.status_code == 200

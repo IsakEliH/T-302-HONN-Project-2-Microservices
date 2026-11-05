@@ -58,12 +58,20 @@ class InventoryConsumer:
         product_id = event.get("productId")
         payment_result = event.get("paymentResult")
 
-        # TODO: stop reserving the specific product
+        # Decrease the reserved count of the product in the inventory
+        repository = InventoryRepository()
+        repository.reserve_product(product_id, -1)
         if payment_result == "success":
             repository = InventoryRepository()
+            # Decrease the quantity of the product in the inventory
             repository.decrease_quantity(product_id)
 
             logger.info("Decreased quantity for productID: %s", product_id)
+        else:
+            logger.info(
+                "Payment failed for productID: %s. Reserved count decreased.",
+                product_id,
+            )
 
         channel.basic_ack(delivery_tag=method.delivery_tag)
 

@@ -43,6 +43,19 @@ class InventoryRepository:
 
         return self._update_product(product, product_id)
 
+    def reserve_product(self, product_id: int, amount: int = 1) -> bool:
+        product = self.get_product(product_id)
+        if not product:
+            return False
+
+        if product["quantity"] < amount:
+            return False
+
+        product["quantity"] -= amount
+        product["reserved"] += amount
+
+        return self._update_product(product, product_id)
+
     def _update_product(self, product: dict, product_id: int) -> bool:
         with open(self.DB_FILE, "r", encoding="utf-8") as file:
             data_list = json.load(file)
