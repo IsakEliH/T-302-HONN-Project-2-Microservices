@@ -52,8 +52,6 @@ services:
     deploy:
       replicas: 2
     environment:
-      - RESEND_API_KEY=${RESEND_API_KEY}
-      - RESEND_SENDER_EMAIL=${RESEND_SENDER_EMAIL:-onboarding@resend.dev}
       - RABBITMQ_HOST=rabbitmq
       - RABBITMQ_PORT=5672
     depends_on:
