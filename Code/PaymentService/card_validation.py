@@ -6,7 +6,7 @@ def __validateCardNumber(cardNumber: str):
 
     for i in range(length):
         digit = int(cardNumber[i])
-        offset_from_end = length - 1 - i
+        offset_from_end = length - i
 
         if offset_from_end % 2 == 1:
             total += digit

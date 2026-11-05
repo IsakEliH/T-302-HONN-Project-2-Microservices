@@ -1,15 +1,1 @@
-[
-    {
-        "productId": 1,
-        "merchantId": 1,
-        "buyerId": 1,
-        "creditCard": {
-            "cardNumber": "0",
-            "expirationMonth": 9,
-            "expirationYear": 3333,
-            "cvc": 123
-        },
-        "discount": 0.2,
-        "orderId": 1
-    }
-]
+[]

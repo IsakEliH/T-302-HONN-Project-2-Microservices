@@ -2,17 +2,9 @@
     {
         "name": "merchatn_1",
         "ssn": "1111",
-        "email": "merchant_1@gmail",
+        "email": "sindrif25@ru.is",
         "phoneNumber": "111-1111",
         "allowsDiscount": true,
         "merchantId": 1
-    },
-    {
-        "name": "merchatn_2",
-        "ssn": "1111",
-        "email": "merchant_1@gmail",
-        "phoneNumber": "111-1111",
-        "allowsDiscount": true,
-        "merchantId": 2
     }
 ]
