@@ -12,7 +12,7 @@ services:
       - BUYER_URL=http://buyer_service:8002
       - INVENTORY_URL=http://inventory_service:8003 
     volumes:
-      - order_data:/app/data
+      - ./OrderService:/app
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -24,7 +24,7 @@ services:
     expose:
       - 8001
     volumes:
-      - merchant_data:/app/data
+      - ./MerchantService:/app
 
   buyer_service:
     build: ./BuyerService
@@ -33,7 +33,7 @@ services:
     expose:
       - 8002
     volumes:
-      - buyer_data:/app/data
+      - ./BuyerService:/app
 
   inventory_service:
     build: ./InventoryService
@@ -42,7 +42,7 @@ services:
     expose:
       - 8003
     volumes:
-      - inventory_data:/app/data
+      - ./InventoryService:/app
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -61,7 +61,7 @@ services:
   payment_service:
     build: ./PaymentService
     volumes:
-      - payment_data:/app/data
+      - ./PaymentService:/app
     depends_on:
       rabbitmq:
         condition: service_healthy
