@@ -5,5 +5,12 @@
         "email": "elmars25@ru.is",
         "phoneNumber": "111-1111",
         "buyerId": 1
+    },
+    {
+        "name": "string",
+        "ssn": "string",
+        "email": "string",
+        "phoneNumber": "string",
+        "buyerId": 2
     }
 ]
