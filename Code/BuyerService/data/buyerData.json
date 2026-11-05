@@ -1,0 +1,9 @@
+[
+    {
+        "name": "buyer_1",
+        "ssn": "111111",
+        "email": "buyer_1@gmail",
+        "phoneNumber": "111-1111",
+        "buyerId": 1
+    }
+]

@@ -1,0 +1,10 @@
+[
+    {
+        "merchantId": 1,
+        "productName": "banani",
+        "price": 10,
+        "quantity": 10,
+        "reserved": 0,
+        "productId": 1
+    }
+]
