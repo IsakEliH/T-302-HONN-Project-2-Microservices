@@ -3,10 +3,6 @@ name: project2-microservices
 services:
   order_service:
     build: ./OrderService
-    # ports:
-    #   - "8005:8005"
-    # expose:
-    #   - 8000
     environment:
       - MERCHANT_URL=http://merchant_service:8001
       - BUYER_URL=http://buyer_service:8002
@@ -19,28 +15,16 @@ services:
 
   merchant_service:
     build: ./MerchantService
-    # ports:
-    #   - "8001:8001"
-    # expose:
-    #   - 8001
     volumes:
       - ./MerchantService:/app
 
   buyer_service:
     build: ./BuyerService
-    # ports:
-    #   - "8002:8002"
-    # expose:
-    #   - 8002
     volumes:
       - ./BuyerService:/app
 
   inventory_service:
     build: ./InventoryService
-    # ports:
-    #   - "8003:8003"
-    # expose:
-    #   - 8003
     volumes:
       - ./InventoryService:/app
     depends_on:
