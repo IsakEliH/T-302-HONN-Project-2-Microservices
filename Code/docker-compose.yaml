@@ -68,6 +68,15 @@ services:
       rabbitmq:
         condition: service_healthy
 
+  API_layer:
+    build: ./API_layer
+    volumes:
+      - -/API_layer:/app
+    ports:
+      - "8000:8000" ##same
+    expose:
+      - 8000 ## af hverju er order á 8000?
+
   rabbitmq:
 
     image: rabbitmq:4-management
