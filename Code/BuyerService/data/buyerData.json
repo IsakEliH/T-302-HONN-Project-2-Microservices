@@ -7,10 +7,24 @@
         "buyerId": 1
     },
     {
-        "name": "string",
-        "ssn": "string",
-        "email": "string",
-        "phoneNumber": "string",
+        "name": "vih",
+        "ssn": "6769",
+        "email": "vih@gm.cum",
+        "phoneNumber": "8294247",
         "buyerId": 2
+    },
+    {
+        "name": "aaa",
+        "ssn": "6769",
+        "email": "vih@gm.cum",
+        "phoneNumber": "8294247",
+        "buyerId": 3
+    },
+    {
+        "name": "bih",
+        "ssn": "sig",
+        "email": "vih@gm.cum",
+        "phoneNumber": "839020",
+        "buyerId": 4
     }
 ]

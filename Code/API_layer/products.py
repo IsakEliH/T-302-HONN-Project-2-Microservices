@@ -1,16 +1,15 @@
 from fastapi import APIRouter, Response
-from InventoryService.models.inventory_model import Inventory
+from models.product import InventoryRequest
 import httpx
 
 router = APIRouter(prefix="/api/products")
 
-PRODUCT_URL = "http://products-service:8000/products"
-
+PRODUCT_URL = "http://inventory_service:8003/products"
 
 @router.post("/")
-async def post_product(productrequest: Inventory):
+async def post_product(productrequest: InventoryRequest):
     async with httpx.AsyncClient() as client:
-        response = await client.post(f"{PRODUCT_URL}/", json=productrequest)
+        response = await client.post(f"{PRODUCT_URL}/", json=productrequest.model_dump())
 
     return Response(
         content=response.content,

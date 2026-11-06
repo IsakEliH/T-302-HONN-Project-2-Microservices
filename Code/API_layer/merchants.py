@@ -1,16 +1,15 @@
 from fastapi import APIRouter, Response
-from MerchantService.merchant_model import MerchantRequest
+from models.merchant import MerchantRequest
 import httpx
 
 router = APIRouter(prefix="/api/merchants")
 
-MERCHANT_URL = "http://merchant-service:8000/merchants"
-
+MERCHANT_URL = "http://merchant_service:8001/merchants"
 
 @router.post("/")
 async def post_merchant(merchantRequest: MerchantRequest):
     async with httpx.AsyncClient() as client:
-        response = await client.post(f"{MERCHANT_URL}/", json=merchantRequest)
+        response = await client.post(f"{MERCHANT_URL}/", json=merchantRequest.model_dump())
 
     return Response(
         content=response.content,
