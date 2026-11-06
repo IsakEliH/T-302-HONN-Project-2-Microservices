@@ -12,10 +12,10 @@ from products import router as product_router
 
 app = FastAPI(title="API Layer")
 
-app.include_router(orders_router)
-app.include_router(buyers_router)
-app.include_router(merchants_router)
-app.include_router(product_router)
+app.include_router(orders_router, tags=["Orders"])
+app.include_router(buyers_router, tags=["Buyers"])
+app.include_router(merchants_router, tags=["Merchants"])
+app.include_router(product_router, tags=["Products"])
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="localhost", port=8000, reload=True)
