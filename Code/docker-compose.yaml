@@ -1,0 +1,94 @@
+name: project2-microservices
+
+services:
+
+  api_layer:
+    build: ./API_layer
+    ports:
+      - "8000:8000"
+    expose:
+      - 8000
+    depends_on:
+      - order_service
+      - merchant_service
+      - buyer_service
+      - inventory_service
+      - payment_service
+
+  order_service:
+    build: ./OrderService
+    expose:
+      - 8004
+    environment:
+      - MERCHANT_URL=http://merchant_service:8001
+      - BUYER_URL=http://buyer_service:8002
+      - INVENTORY_URL=http://inventory_service:8003 
+    volumes:
+      - ./OrderService:/app
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  merchant_service:
+    build: ./MerchantService
+    expose:
+      - 8001
+    volumes:
+      - ./MerchantService:/app
+
+  buyer_service:
+    build: ./BuyerService
+    expose:
+      - 8002
+    volumes:
+      - ./BuyerService:/app
+
+  inventory_service:
+    build: ./InventoryService
+    expose:
+      - 8003
+    volumes:
+      - ./InventoryService:/app
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  email_service:
+    build: ./EmailService
+    deploy:
+      replicas: 2
+    env_file:
+      - ./EmailService/.env
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  payment_service:
+    build: ./PaymentService
+    volumes:
+      - ./PaymentService:/app
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+
+  rabbitmq:
+    image: rabbitmq:4-management
+    container_name: rabbitmq
+    expose:
+      - "5672"
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+      - ./enabled_plugins:/etc/rabbitmq/enabled_plugins
+    healthcheck:
+      test: [ "CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  rabbitmq-data:
