@@ -51,9 +51,9 @@ services:
     build: ./EmailService
     deploy:
       replicas: 2
+    env_file:
+      - ./EmailService/.env
     environment:
-      - RESEND_API_KEY=${RESEND_API_KEY}
-      - RESEND_SENDER_EMAIL=${RESEND_SENDER_EMAIL:-onboarding@resend.dev}
       - RABBITMQ_HOST=rabbitmq
       - RABBITMQ_PORT=5672
     depends_on:
@@ -67,6 +67,15 @@ services:
     depends_on:
       rabbitmq:
         condition: service_healthy
+
+  API_layer:
+    build: ./API_layer
+    volumes:
+      - -/API_layer:/app
+    ports:
+      - "8000:8000" ##same
+    expose:
+      - 8000 ## af hverju er order á 8000?
 
   rabbitmq:
 
