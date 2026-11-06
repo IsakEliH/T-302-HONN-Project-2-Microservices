@@ -91,7 +91,7 @@ class EmailSender:
         """
         subject = "Order has been purchased"
         body = f"Order {event.order_id} has been successfully purchased"
-        html = f"<p>Order <strong>#{event.order_id}</strong> has been successfully purchased.</p>"
+        html = f"<p>Order <strong>{event.order_id}</strong> has been successfully purchased</p>"
 
         b_email = buyer_email or event.buyer_email
         m_email = merchant_email or event.merchant_email
@@ -122,7 +122,7 @@ class EmailSender:
         """
         subject = "Order purchase failed"
         body = f"Order {event.order_id} purchase has failed"
-        html = f"<p>Order <strong>#{event.order_id}</strong> purchase has failed.</p>"
+        html = f"<p>Order <strong>{event.order_id}</strong> purchase has failed</p>"
 
         b_email = buyer_email or event.buyer_email
         m_email = merchant_email or event.merchant_email

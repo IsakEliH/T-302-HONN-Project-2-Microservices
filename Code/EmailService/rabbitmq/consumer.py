@@ -1,6 +1,5 @@
 import json
 import logging
-import socket
 import time
 from typing import Optional
 import pika
@@ -17,6 +16,9 @@ if not logger.handlers:
 
 
 class RabbitMQConsumer:
+    EMAIL_QUEUE = "email.events"
+    LEGACY_PAYMENT_QUEUE = "payments"
+
     def __init__(self, email_sender: Optional[EmailSender] = None):
         self.email_sender = email_sender or EmailSender()
         self.host = config.RABBITMQ_HOST
@@ -26,6 +28,7 @@ class RabbitMQConsumer:
         self.connection: Optional[pika.BlockingConnection] = None
         self.channel: Optional[pika.adapters.blocking_connection.BlockingChannel] = None
         self._is_running = False
+        self.queues = [self.EMAIL_QUEUE, self.LEGACY_PAYMENT_QUEUE]
 
         # In-memory stores to track and correlate asynchronous OrderCreated and Payment events by order_id
         self.orders: dict[int, OrderCreatedEvent] = {}
@@ -48,61 +51,42 @@ class RabbitMQConsumer:
         self.channel = self.connection.channel()
         self.channel.basic_qos(prefetch_count=1)
 
-        # 1. Setup Consistent Hash Exchange and Dynamic Queue for Email Events
-        email_exchange = "email.events.exchange"
-        container_hostname = socket.gethostname()
-        dynamic_email_queue = f"email_queue_{container_hostname}"
-
-        self.channel.exchange_declare(
-            exchange=email_exchange,
-            exchange_type="x-consistent-hash",
-            durable=True,
-        )
-
-        # Declare a unique private queue for this container instance
         self.channel.queue_declare(
-            queue=dynamic_email_queue,
+            queue=self.EMAIL_QUEUE,
             durable=True,
-            exclusive=False,  # Keep durable so messages aren't lost if restarting briefly
+            arguments={"x-queue-type": "quorum"},
         )
 
-        # Bind this container's queue to the exchange with weight '1'
-        self.channel.queue_bind(
-            exchange=email_exchange,
-            queue=dynamic_email_queue,
-            routing_key="1",
-        )
-
-        self.channel.basic_consume(
-            queue=dynamic_email_queue,
-            on_message_callback=self._on_message,
-            auto_ack=False,
-        )
-        logger.info("Subscribed to dynamic email queue '%s' via consistent hash exchange", dynamic_email_queue)
-
-        # 2. Setup standard queue for Payment events (e.g., 'payments')
-        payment_queue = "payments"
         try:
             self.channel.queue_declare(
-                queue=payment_queue,
+                queue=self.LEGACY_PAYMENT_QUEUE,
                 durable=True,
                 arguments={"x-queue-type": "quorum"},
             )
         except pika.exceptions.ChannelClosedByBroker:
-            logger.info("Re-declaring queue '%s' with standard configuration.", payment_queue)
+            logger.info(
+                "Re-declaring legacy queue '%s' with standard configuration.",
+                self.LEGACY_PAYMENT_QUEUE,
+            )
             self.channel = self.connection.channel()
             self.channel.basic_qos(prefetch_count=1)
             self.channel.queue_declare(
-                queue=payment_queue,
+                queue=self.EMAIL_QUEUE,
+                durable=True,
+                arguments={"x-queue-type": "quorum"},
+            )
+            self.channel.queue_declare(
+                queue=self.LEGACY_PAYMENT_QUEUE,
                 durable=True,
             )
 
-        self.channel.basic_consume(
-            queue=payment_queue,
-            on_message_callback=self._on_message,
-            auto_ack=False,
-        )
-        logger.info("Subscribed to queue '%s' with prefetch_count=1", payment_queue)
+        for queue in self.queues:
+            self.channel.basic_consume(
+                queue=queue,
+                on_message_callback=self._on_message,
+                auto_ack=False,
+            )
+            logger.info("Subscribed to queue '%s' with prefetch_count=1", queue)
 
     def _on_message(
         self,
@@ -164,6 +148,15 @@ class RabbitMQConsumer:
                 buyer_email=buyer_email,
                 merchant_email=merchant_email,
             )
+        elif payment_event.buyer_email or payment_event.merchant_email:
+            logger.info(
+                "Dispatching self-contained payment event for order %s.", order_id
+            )
+            self._dispatch_payment_email(
+                payment_event,
+                buyer_email=payment_event.buyer_email,
+                merchant_email=payment_event.merchant_email,
+            )
         else:
             self.pending_payments.setdefault(order_id, []).append(payment_event)
             logger.info(
@@ -202,24 +195,28 @@ class RabbitMQConsumer:
             "ordercreated" in event_type
             or "order-created" in event_type
             or "order_created" in event_type
-            or ("order" in data and "orderId" in data)
-            or ("buyer_email" in data or "buyerEmail" in data)
-            or ("product_name" in data or "productName" in data)
-            or ("total_price" in data or "totalPrice" in data)
         )
+
+        is_payment = (
+            "payment" in event_type
+            or routing_key == self.LEGACY_PAYMENT_QUEUE
+            or "paymentResult" in data
+            or "payment_result" in data
+            or ("orderId" in data and "status" in data)
+        )
+
+        if not is_order_created and not is_payment:
+            is_order_created = (
+                ("order" in data and "orderId" in data)
+                or ("buyer_email" in data or "buyerEmail" in data)
+                or ("product_name" in data or "productName" in data)
+                or ("total_price" in data or "totalPrice" in data)
+            )
 
         if is_order_created:
             order_event = OrderCreatedEvent.model_validate(data)
             self._handle_order_created(order_event)
             return
-
-        is_payment = (
-            "payment" in event_type
-            or routing_key == "payments"
-            or "paymentResult" in data
-            or "payment_result" in data
-            or ("orderId" in data and "status" in data and "product_name" not in data and "productName" not in data and "buyerEmail" not in data and "buyer_email" not in data)
-        )
 
         if is_payment:
             payment_event = PaymentEvent.model_validate(data)

@@ -1,6 +1,12 @@
 from card_validation import validateCard
 from models import PaymentResult, PaymentResultInventory
-from messaging import open_chanel, publish_payment, QUEUE
+from messaging import (
+    EMAIL_QUEUE,
+    INVENTORY_QUEUE,
+    QUEUE,
+    open_chanel,
+    publish_payment,
+)
 from payment_repository import PaymentRepository
 
 import json
@@ -40,15 +46,16 @@ def main():
         logger.info("Successfully connected to RabbitMQ.")
 
         # Declare queue
-        logger.info("Declaring queue '%s'...", QUEUE)
+        for queue in (QUEUE, EMAIL_QUEUE, INVENTORY_QUEUE):
+            logger.info("Declaring queue '%s'...", queue)
+            channel.queue_declare(
+                queue=queue,
+                durable=True,
+                arguments={"x-queue-type": "quorum"},
+            )
+            logger.info("Successfully declared queue '%s'.", queue)
 
-        channel.queue_declare(
-            queue=QUEUE,
-            durable=True,
-            arguments={"x-queue-type": "quorum"},
-        )
-
-        logger.info("Successfully declared queue '%s'.", QUEUE)
+        channel.confirm_delivery()
         logger.info("Starting PaymentService consumer...")
 
 
@@ -74,8 +81,10 @@ def main():
             # result for Email
             result = PaymentResult(
                 orderId=orderId,
-                paymentResult=status
-                )
+                paymentResult=status,
+                buyerEmail=order.get("buyerEmail"),
+                merchantEmail=order.get("merchantEmail"),
+            )
 
             # result for Inventory
             resultInventory = PaymentResultInventory(
@@ -85,11 +94,11 @@ def main():
             
 
             # Sends queue to EmailService
-            publish_payment(channel, "payments", result)
-            logger.info("Published payment result to EmailService through, Queue: 'payments'.")
+            publish_payment(channel, EMAIL_QUEUE, result)
+            logger.info("Published payment result to EmailService through queue '%s'.", EMAIL_QUEUE)
 
             # Sends queue to InventoryService
-            publish_payment(channel, "paymentInventory", resultInventory)
+            publish_payment(channel, INVENTORY_QUEUE, resultInventory)
             logger.info("Published payment result to InventoryService through, Queue: 'paymentInventory'.")
 
             channel.basic_ack(method.delivery_tag)
