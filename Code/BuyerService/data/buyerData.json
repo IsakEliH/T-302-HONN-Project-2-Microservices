@@ -19,5 +19,12 @@
         "email": "vih@gm.cum",
         "phoneNumber": "8294247",
         "buyerId": 3
+    },
+    {
+        "name": "bih",
+        "ssn": "sig",
+        "email": "vih@gm.cum",
+        "phoneNumber": "839020",
+        "buyerId": 4
     }
 ]

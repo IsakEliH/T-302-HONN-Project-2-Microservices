@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Response
-from models.order import Order
+from models.order import OrderRequest
 import httpx
 
 router = APIRouter(prefix="/api/orders")
@@ -7,7 +7,7 @@ router = APIRouter(prefix="/api/orders")
 ORDER_URL = "http://order_service:8005/orders"
 
 @router.post("/")
-async def post_order(orderRequest: Order):
+async def post_order(orderRequest: OrderRequest):
     async with httpx.AsyncClient() as client:
         response = await client.post(f"{ORDER_URL}/", json=orderRequest.model_dump())
 
