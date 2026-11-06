@@ -97,9 +97,9 @@ def build_order(order_dict: dict) -> Order:
 
 def calculate_total_price(price: float, discount: float) -> float:
     if discount is not None:
-        return price * (1 - discount)
+        return round(price * (1 - discount), 2)
     else:
-        return price
+        return round(price, 2)
 
 
 def get_merchant_email(merchant_id: int) -> str:

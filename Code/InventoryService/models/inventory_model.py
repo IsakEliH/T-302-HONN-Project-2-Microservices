@@ -4,14 +4,14 @@ from pydantic import BaseModel
 class InventoryRequest(BaseModel):
     merchantId: int
     productName: str
-    price: int
+    price: float
     quantity: int
 
 
 class Inventory(BaseModel):
     merchantId: int
     productName: str
-    price: int
+    price: float
     quantity: int
     reserved: int
 
