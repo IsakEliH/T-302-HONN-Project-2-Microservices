@@ -36,13 +36,17 @@ def validateCard(cardInfo: CreditCard):
     Retrieves it's information and validates each indevidually
     Returns True if all are valid, else returns False
     """
+
     cardNumber = cardInfo.get("cardNumber")
     expirationMonth = cardInfo.get("expirationMonth")
     expirationYear = cardInfo.get("expirationYear")
     cvc = cardInfo.get("cvc")
-
+    try:
+        valid_card_number = __validateCardNumber(cardNumber)
+    except ValueError:
+        return False
     return (
-        __validateCardNumber(cardNumber)
+        valid_card_number
         and __ValidateExpirationMonth(expirationMonth)
         and __validateExpirationYear(expirationYear)
         and __validateCvc(cvc)
