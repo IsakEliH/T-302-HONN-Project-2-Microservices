@@ -12,8 +12,8 @@ from products import router as product_router
 
 app = FastAPI(title="API Layer")
 
-app.include_router(buyers_router)
 app.include_router(orders_router)
+app.include_router(buyers_router)
 app.include_router(merchants_router)
 app.include_router(product_router)
 

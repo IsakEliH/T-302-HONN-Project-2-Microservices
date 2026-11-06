@@ -4,7 +4,7 @@ import httpx
 
 router = APIRouter(prefix="/api/orders")
 
-ORDER_URL = "http://order_service:8005/orders"
+ORDER_URL = "http://order_service:8004/orders"
 
 @router.post("/")
 async def post_order(orderRequest: OrderRequest):
