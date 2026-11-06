@@ -5,5 +5,19 @@
         "email": "elmars25@ru.is",
         "phoneNumber": "111-1111",
         "buyerId": 1
+    },
+    {
+        "name": "vih",
+        "ssn": "6769",
+        "email": "vih@gm.cum",
+        "phoneNumber": "8294247",
+        "buyerId": 2
+    },
+    {
+        "name": "aaa",
+        "ssn": "6769",
+        "email": "vih@gm.cum",
+        "phoneNumber": "8294247",
+        "buyerId": 3
     }
 ]

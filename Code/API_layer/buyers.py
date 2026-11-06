@@ -1,16 +1,16 @@
 from fastapi import APIRouter, FastAPI, Response
-from BuyerService.buyer_model import BuyerRequest
+from models.buyer import BuyerRequest
 import httpx
 
 app = FastAPI()
 router = APIRouter(prefix="/api/buyers")
-BUYER_URL = "http://BuyerService:8000/buyers"
+BUYER_URL = "http://buyer_service:8002/buyers"
 
 
 @router.post("/")
 async def post_buyer(buyerRequest: BuyerRequest):
     async with httpx.AsyncClient() as client:
-        response = await client.post(f"{BUYER_URL}/", json=buyerRequest)
+        response = await client.post(f"{BUYER_URL}/", json=buyerRequest.model_dump())
 
     return Response(
         content=response.content,
